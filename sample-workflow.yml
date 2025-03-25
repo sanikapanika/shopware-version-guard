@@ -1,0 +1,13 @@
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run shopware-version-guard
+        uses: sanikapanika/shopware-version-guard@v1  # or use org/repo@main if published externally
+        env:
+          PROD_URL: ${{ secrets.SHOPWARE_PROD_URL }}
+          PROD_CLIENT_ID: ${{ secrets.SHOPWARE_PROD_CLIENT_ID }}
+          PROD_CLIENT_SECRET: ${{ secrets.SHOPWARE_PROD_CLIENT_SECRET }}
+          TEST_URL: ${{ secrets.SHOPWARE_TEST_URL }}
+          TEST_CLIENT_ID: ${{ secrets.SHOPWARE_TEST_CLIENT_ID }}
+          TEST_CLIENT_SECRET: ${{ secrets.SHOPWARE_TEST_CLIENT_SECRET }}

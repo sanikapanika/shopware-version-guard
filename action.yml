@@ -1,0 +1,9 @@
+name: shopware-version-guard
+description: >
+  GitHub Action to ensure your Shopware test environment matches the production version
+  before importing anonymized production data. Prevents version mismatches that could break test systems.
+
+inputs: {}
+runs:
+  using: docker
+  image: Dockerfile
