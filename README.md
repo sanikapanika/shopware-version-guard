@@ -12,18 +12,22 @@ It is intended to run before importing a production database into a test instanc
 - Authenticates to both Shopware instances using **integration credentials**
 - Fetches `/api/_info/config` to determine version
 - Compares `major.minor.patch` components
-- Enforces compatibility based on **major + minor**
-- Allows patch version mismatch but with a warning
+- Supports configurable version sensitivity via `FAIL_ON` input:
+  - `exact` — fail on any mismatch
+  - `minor` — allow patch differences, fail on minor/major
+  - `major` — allow minor and patch differences
+  - `default` — same as `minor`, but warns on patch difference
 
 ---
 
 ## 🔍 Behavior
 
-| Version Comparison            | Result                                     |
-|------------------------------|--------------------------------------------|
-| `major` or `minor` mismatch  | ❌ **Fails** the workflow (`exit 1`)        |
-| `patch` mismatch only        | ⚠️ **Warning**, but continues               |
-| Exact match                  | ✅ **Passes** silently                      |
+| `FAIL_ON` Value | Fails on           | Warns on      | Passes on                    |
+|----------------|--------------------|---------------|------------------------------|
+| `exact`        | any difference      | —             | exact match only             |
+| `minor`        | major/minor change  | patch diff    | patch match                  |
+| `major`        | major change        | minor/patch   | same major                   |
+| `default`      | major/minor change  | patch diff    | patch match                  |
 
 ---
 
@@ -39,20 +43,21 @@ It is intended to run before importing a production database into a test instanc
     TEST_URL: ${{ secrets.SHOPWARE_TEST_URL }}
     TEST_CLIENT_ID: ${{ secrets.SHOPWARE_TEST_CLIENT_ID }}
     TEST_CLIENT_SECRET: ${{ secrets.SHOPWARE_TEST_CLIENT_SECRET }}
+    FAIL_ON: minor  # or: exact, major, default
 ```
 
 ---
 
 ## 🔐 Required Secrets
 
-| Variable                | Description                                        |
-|------------------------|----------------------------------------------------|
-| `SHOPWARE_PROD_URL`    | Base URL of your production Shopware instance     |
-| `SHOPWARE_PROD_CLIENT_ID` | Integration client ID for production             |
-| `SHOPWARE_PROD_CLIENT_SECRET` | Integration client secret for production     |
-| `SHOPWARE_TEST_URL`    | Base URL of your test Shopware instance           |
-| `SHOPWARE_TEST_CLIENT_ID` | Integration client ID for test                  |
-| `SHOPWARE_TEST_CLIENT_SECRET` | Integration client secret for test         |
+| Variable                        | Description                                     |
+|--------------------------------|-------------------------------------------------|
+| `SHOPWARE_PROD_URL`            | Base URL of your production Shopware instance  |
+| `SHOPWARE_PROD_CLIENT_ID`      | Integration client ID for production           |
+| `SHOPWARE_PROD_CLIENT_SECRET`  | Integration client secret for production       |
+| `SHOPWARE_TEST_URL`            | Base URL of your test Shopware instance        |
+| `SHOPWARE_TEST_CLIENT_ID`      | Integration client ID for test                 |
+| `SHOPWARE_TEST_CLIENT_SECRET`  | Integration client secret for test             |
 
 ---
 
@@ -69,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Shopware Version Guard
-        uses: sanikapanika/shopware-version-guard@v1
+        uses: sanikapanika/shopware-version-guard@v0.0.2
         env:
           PROD_URL: ${{ secrets.SHOPWARE_PROD_URL }}
           PROD_CLIENT_ID: ${{ secrets.SHOPWARE_PROD_CLIENT_ID }}
@@ -77,6 +82,7 @@ jobs:
           TEST_URL: ${{ secrets.SHOPWARE_TEST_URL }}
           TEST_CLIENT_ID: ${{ secrets.SHOPWARE_TEST_CLIENT_ID }}
           TEST_CLIENT_SECRET: ${{ secrets.SHOPWARE_TEST_CLIENT_SECRET }}
+          FAIL_ON: default
 ```
 
 ---
@@ -95,6 +101,7 @@ docker run \
   -e PROD_CLIENT_SECRET=... \
   -e TEST_CLIENT_ID=... \
   -e TEST_CLIENT_SECRET=... \
+  -e FAIL_ON=minor \
   shopware-version-guard
 ```
 
